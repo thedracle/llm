@@ -57,17 +57,26 @@ fn main() {
         }
         "aarch64" => {
             if compiler.is_like_clang() || compiler.is_like_gnu() {
-                if std::env::var("HOST") == std::env::var("TARGET") {
-                    build.flag("-mcpu=native");
-                } else {
-                    #[allow(clippy::single_match)]
-                    match target_os.as_str() {
-                        "macos" => {
-                            build.flag("-mcpu=apple-m1");
-                            build.flag("-mfpu=neon");
-                        }
-                        _ => {}
+                match env::var("TARGET") {
+                    Ok(target) if target.contains("apple") => {
+                        build.flag("-mcpu=apple-m1");
                     }
+                    _ => {
+                        if std::env::var("HOST") == env::var("TARGET") {
+                            build.flag("-mcpu=native");
+                        } else {
+                            #[allow(clippy::single_match)]
+                            match target_os.as_str() {
+                                "macos" => {
+                                    build.flag("-mcpu=apple-m1");
+                                    build.flag("-mfpu=neon");
+                                }
+                                _ => {}
+                            }
+                        }
+
+                    }
+
                 }
                 build.flag("-pthread");
             }
